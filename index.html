@@ -142,8 +142,34 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:li
 .budget-income-row button{height:46px;padding:0 16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow-card)}
 .add-budget-form{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px;backdrop-filter:blur(14px)}
 .add-budget-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.summary-main .s-val{max-width:82%}
+.balance-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.balance-chip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(14px)}
+.balance-chip .k{display:block;font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:4px}
+.balance-chip .v{display:block;font-size:12px;font-weight:700;color:var(--text)}
+.card-orb{position:absolute;right:18px;bottom:18px;width:92px;height:92px;border-radius:28px;background:linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.card-orb::before,.card-orb::after{content:"";position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.18)}
+.card-orb::before{width:34px;height:34px;right:18px;top:28px}
+.card-orb::after{width:34px;height:34px;right:36px;top:28px;background:rgba(255,255,255,.06)}
+.quick-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 20px 0}
+.quick-card{position:relative;padding:14px 14px 12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(18px);box-shadow:var(--shadow-card);overflow:hidden}
+.quick-card::after{content:"";position:absolute;inset:auto -20px -26px auto;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle, rgba(200,240,97,.18), transparent 62%)}
+.quick-card .q-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+.quick-card .q-value{font-size:17px;font-weight:800;letter-spacing:-.4px}
+.quick-card .q-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px 14px 12px;margin-bottom:12px;backdrop-filter:blur(18px);box-shadow:var(--shadow-card)}
+.insight-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.insight-badge{padding:7px 10px;border-radius:999px;background:rgba(200,240,97,.1);border:1px solid rgba(200,240,97,.18);font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--text)}
+.insight-copy{font-size:13px;line-height:1.45;color:var(--text)}
+.insight-copy span{color:var(--accent);font-weight:800}
+.tx-item{position:relative}
+.tx-item::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,0));-webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.section-label{display:flex;align-items:center;justify-content:space-between}
 @media (max-width:380px){
   .s-val{font-size:30px}.summary{grid-template-columns:1fr 1fr}.month-badge{min-width:88px}.tab{min-width:88px}
+  .quick-strip{grid-template-columns:1fr}
+  .summary-main .s-val{max-width:100%}
+  .card-orb{display:none}
 }
 </style>
 </head>
@@ -166,6 +192,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:li
     <div class="summary-main">
       <div class="s-label">Balance</div>
       <div class="s-val" id="s-balance">AED 0.00</div>
+      <div class="balance-meta">
+        <div class="balance-chip"><span class="k">Savings rate</span><span class="v" id="chip-savings-rate">0%</span></div>
+        <div class="balance-chip"><span class="k">Top category</span><span class="v" id="chip-top-cat">No spend</span></div>
+      </div>
+      <div class="card-orb" aria-hidden="true"></div>
     </div>
     <div class="summary-sub">
       <div class="s-label">Income</div>
@@ -174,6 +205,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:li
     <div class="summary-sub">
       <div class="s-label">Spent</div>
       <div class="s-val spent" id="s-spent">0</div>
+    </div>
+  </div>
+  <div class="quick-strip">
+    <div class="quick-card">
+      <div class="q-label">Runway</div>
+      <div class="q-value" id="q-runway">0 days</div>
+      <div class="q-sub" id="q-runway-sub">Track spending to unlock</div>
+    </div>
+    <div class="quick-card">
+      <div class="q-label">This month</div>
+      <div class="q-value" id="q-burn">AED 0</div>
+      <div class="q-sub" id="q-burn-sub">No activity yet</div>
     </div>
   </div>
 </div>
@@ -186,6 +229,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:li
 
 <!-- Transactions tab -->
 <div class="content" id="content-txns">
+  <div class="insight-card">
+    <div class="insight-top">
+      <div class="insight-badge">Smart insight</div>
+      <div class="tx-meta" id="insight-period">Current month</div>
+    </div>
+    <div class="insight-copy" id="smart-insight">Add a few transactions and Spendly will highlight your strongest pattern.</div>
+  </div>
   <div class="section-label" style="margin-bottom:12px">Cash flow journal</div>
   <div class="filter-row">
     <select id="f-type" onchange="renderTxns()">
@@ -466,6 +516,36 @@ function render(){
   bEl.textContent=fmt(bal);bEl.className='s-val '+(bal>=0?'pos':'neg');
   document.getElementById('s-income').textContent=fmtShort(inc);
   document.getElementById('s-spent').textContent=fmtShort(spent);
+
+  const expenses=monthData.filter(d=>d.type==='expense');
+  const savingsRate=inc>0?Math.max(0,Math.round((bal/inc)*100)):0;
+  const totalsByCat={};
+  expenses.forEach(d=>{totalsByCat[d.cat]=(totalsByCat[d.cat]||0)+d.amount;});
+  const topCategory=Object.entries(totalsByCat).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('chip-savings-rate').textContent=(inc>0?savingsRate:0)+'%';
+  document.getElementById('chip-top-cat').textContent=topCategory?topCategory[0]:'No spend';
+
+  const nowDay=Math.max(1,new Date().getDate());
+  const avgDailySpend=spent/nowDay;
+  const runway=avgDailySpend>0?Math.max(0,Math.round((bal||0)/avgDailySpend)):0;
+  document.getElementById('q-runway').textContent=avgDailySpend>0?runway+' days':'0 days';
+  document.getElementById('q-runway-sub').textContent=avgDailySpend>0?'Based on current burn rate':'Track spending to unlock';
+  document.getElementById('q-burn').textContent=fmtShort(spent);
+  document.getElementById('q-burn-sub').textContent=expenses.length?expenses.length+' expense entries logged':'No activity yet';
+
+  const insightEl=document.getElementById('smart-insight');
+  const insightPeriod=document.getElementById('insight-period');
+  insightPeriod.textContent=monthName();
+  if(!monthData.length){
+    insightEl.innerHTML='Add a few transactions and <span>Spendly</span> will highlight your strongest pattern.';
+  }else if(inc>0 && bal>=0){
+    insightEl.innerHTML='You are holding onto <span>'+savingsRate+'%</span> of this month's income. Keep your top spend category, <span>'+(topCategory?topCategory[0]:'Expenses')+'</span>, under control to stay ahead.';
+  }else if(topCategory){
+    const pct=Math.round((topCategory[1]/Math.max(spent,1))*100);
+    insightEl.innerHTML='<span>'+topCategory[0]+'</span> drives '+pct+'% of your monthly spend. A small cut here will move your balance fastest.';
+  }else{
+    insightEl.innerHTML='Your monthly balance is <span>'+(bal>=0?'healthy':'under pressure')+'</span>. Log a few more entries to unlock smarter coaching.';
+  }
   renderTxns();
   if(activeTab==='breakdown')renderBreakdown();
   if(activeTab==='budget')renderBudget();

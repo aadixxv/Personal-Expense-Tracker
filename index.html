@@ -200,6 +200,14 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
 .bar-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .brkdn-pct{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:5px}
 
+.cf-banner{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;margin-bottom:14px}
+.cf-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.cf-amt{font-size:14px;font-weight:700;font-family:'DM Mono',monospace}
+.bgt-income-btn{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em;transition:background .15s;white-space:nowrap}
+.bgt-income-btn:hover{background:rgba(255,255,255,0.2)}
+.bgt-income-btn.danger{border-color:rgba(248,113,113,0.4);background:rgba(248,113,113,0.15);color:#fca5a5}
+.bgt-income-btn.danger:hover{background:rgba(248,113,113,0.3)}
+
 /* ══ BUDGET ══ */
 .bgt-section{margin-bottom:24px}
 .bgt-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -427,9 +435,11 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
     <div class="pane" id="pane-budget">
       <div class="bgt-section">
         <div class="sec-label">Expected income</div>
-        <div class="bgt-income-row">
-          <div class="field"><input type="number" id="b-inc-val" placeholder="AED amount" inputmode="decimal" min="0" step="0.01"></div>
-          <button class="small-btn" onclick="setBudgetIncome()">Set</button>
+        <div id="bgt-income-form">
+          <div class="bgt-income-row">
+            <div class="field"><input type="number" id="b-inc-val" placeholder="AED amount" inputmode="decimal" min="0" step="0.01"></div>
+            <button class="small-btn" onclick="setBudgetIncome()">Set</button>
+          </div>
         </div>
         <div id="budget-income-display"></div>
       </div>
@@ -551,16 +561,47 @@ let data=[], budget={income:0,items:[]};
 let categories=[...DEFAULT_CATS];
 let activeTab='txns', pieChart=null, trendChart=null, viewOffset=0;
 
-try{const s=localStorage.getItem('tracker_data2');if(s)data=JSON.parse(s);}catch(e){}
-try{const b=localStorage.getItem('tracker_budget2');if(b)budget=JSON.parse(b);}catch(e){}
-try{const c=localStorage.getItem('tracker_cats2');if(c)categories=JSON.parse(c);}catch(e){}
-try{const t=localStorage.getItem('tracker_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
+/* ── PERMANENT STORAGE KEYS (never change these) ── */
+const KEY_DATA   = 'tracker_data_v1';
+const KEY_BUDGET = 'tracker_budget_v1';
+const KEY_CATS   = 'tracker_cats_v1';
+const KEY_THEME  = 'tracker_theme';
+
+/* ── MIGRATION: rescue data from any previous key name ── */
+(function migrate(){
+  const DATA_OLD   = ['tracker_data2','tracker_data','spendly_v2','spendly_data'];
+  const BUDGET_OLD = ['tracker_budget2','tracker_budget','spendly_budget'];
+  const CATS_OLD   = ['tracker_cats2','tracker_cats'];
+  function firstFound(keys){
+    for(const k of keys){try{const v=localStorage.getItem(k);if(v)return v;}catch(e){}}
+    return null;
+  }
+  // Only migrate if the permanent key doesn't exist yet
+  if(!localStorage.getItem(KEY_DATA)){
+    const old=firstFound(DATA_OLD);
+    if(old)try{localStorage.setItem(KEY_DATA,old);}catch(e){}
+  }
+  if(!localStorage.getItem(KEY_BUDGET)){
+    const old=firstFound(BUDGET_OLD);
+    if(old)try{localStorage.setItem(KEY_BUDGET,old);}catch(e){}
+  }
+  if(!localStorage.getItem(KEY_CATS)){
+    const old=firstFound(CATS_OLD);
+    if(old)try{localStorage.setItem(KEY_CATS,old);}catch(e){}
+  }
+})();
+
+/* ── LOAD ── */
+try{const s=localStorage.getItem(KEY_DATA);if(s)data=JSON.parse(s);}catch(e){}
+try{const b=localStorage.getItem(KEY_BUDGET);if(b)budget=JSON.parse(b);}catch(e){}
+try{const c=localStorage.getItem(KEY_CATS);if(c)categories=JSON.parse(c);}catch(e){}
+try{const t=localStorage.getItem(KEY_THEME);if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
 
 /* HELPERS */
 const isDark=()=>document.documentElement.getAttribute('data-theme')==='dark';
-const save=()=>{try{localStorage.setItem('tracker_data2',JSON.stringify(data));}catch(e){}};
-const saveBudget=()=>{try{localStorage.setItem('tracker_budget2',JSON.stringify(budget));}catch(e){}};
-const saveCats=()=>{try{localStorage.setItem('tracker_cats2',JSON.stringify(categories));}catch(e){}};
+const save=()=>{try{localStorage.setItem(KEY_DATA,JSON.stringify(data));}catch(e){}};
+const saveBudget=()=>{try{localStorage.setItem(KEY_BUDGET,JSON.stringify(budget));}catch(e){}};
+const saveCats=()=>{try{localStorage.setItem(KEY_CATS,JSON.stringify(categories));}catch(e){}};
 const fmt=n=>'AED '+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 const fmtS=n=>n>=1000?'AED '+(n/1000).toFixed(1)+'k':'AED '+Math.round(n);
 const today=()=>new Date().toISOString().slice(0,10);
@@ -589,7 +630,7 @@ function populateSelects(){
 function toggleTheme(){
   const next=isDark()?'light':'dark';
   document.documentElement.setAttribute('data-theme',next);
-  localStorage.setItem('tracker_theme',next);
+  localStorage.setItem(KEY_THEME,next);
   if(activeTab==='breakdown')renderBreakdown();
 }
 
@@ -697,6 +738,13 @@ function saveEdit(){
   save();render();closeEditSheet();
 }
 
+/* CARRY FORWARD — closing balance of all months before the given key */
+function carryForward(key){
+  return data
+    .filter(d=>d.date&&d.date.slice(0,7)<key)
+    .reduce((s,d)=>d.type==='income'?s+d.amount:s-d.amount,0);
+}
+
 /* RENDER */
 function render(){
   const key=viewMonthKey();
@@ -705,7 +753,8 @@ function render(){
   const md=dataForMonth(key);
   const inc=md.filter(d=>d.type==='income').reduce((s,d)=>s+d.amount,0);
   const spent=md.filter(d=>d.type==='expense').reduce((s,d)=>s+d.amount,0);
-  const bal=inc-spent;
+  const cf=carryForward(key);
+  const bal=cf+inc-spent;
   const bEl=document.getElementById('s-balance');
   bEl.textContent=fmt(bal);bEl.className='s-val big '+(bal>=0?'pos':'neg');
   document.getElementById('s-income').textContent=fmtS(inc);
@@ -724,8 +773,20 @@ function renderTxns(){
   if(type!=='all')rows=rows.filter(d=>d.type===type);
   if(cat!=='all')rows=rows.filter(d=>d.cat===cat);
   const el=document.getElementById('tx-list');
-  if(!rows.length){el.innerHTML='<div class="empty">No entries for this month.<br>Tap + to add one.</div>';return;}
-  let html='',lastDate='';
+  const cf=carryForward(key);
+  let html='';
+  if(type==='all'&&cat==='all'){
+    const prevDate=new Date(viewMonthDate());prevDate.setMonth(prevDate.getMonth()-1);
+    const prevKey=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+    const hasPrev=data.some(d=>d.date&&d.date.slice(0,7)<=prevKey);
+    if(hasPrev){
+      const cfColor=cf>=0?'var(--green)':'var(--red)';
+      const cfSign=cf>=0?'+':'';
+      html+=`<div class="cf-banner"><div class="cf-label">Carried forward</div><div class="cf-amt" style="color:${cfColor}">${cfSign}${fmt(cf)}</div></div>`;
+    }
+  }
+  if(!rows.length){el.innerHTML=html+'<div class="empty">No entries for this month.<br>Tap + to add one.</div>';return;}
+  let lastDate='';
   rows.forEach(d=>{
     if(d.date!==lastDate){
       const label=d.date===today()?'Today':new Date(d.date+'T00:00:00').toLocaleDateString('en-AE',{weekday:'short',month:'short',day:'numeric'});
@@ -827,6 +888,16 @@ function setBudgetIncome(){
   if(!v||v<=0)return;
   budget.income=v;saveBudget();renderBudget();
   document.getElementById('b-inc-val').value='';
+  document.getElementById('bgt-income-form').style.display='none';
+}
+function editBudgetIncome(){
+  document.getElementById('b-inc-val').value=budget.income||'';
+  document.getElementById('bgt-income-form').style.display='block';
+  document.getElementById('b-inc-val').focus();
+}
+function clearBudgetIncome(){
+  if(!confirm('Remove expected income?'))return;
+  budget.income=0;saveBudget();renderBudget();
 }
 function toggleAddBudget(){const f=document.getElementById('add-budget-form');f.style.display=f.style.display==='none'?'block':'none';}
 function addBudgetItem(){
@@ -844,8 +915,15 @@ function deleteBudgetItem(cat){budget.items=budget.items.filter(i=>i.cat!==cat);
 
 function renderBudget(){
   const key=viewMonthKey();
-  const id=document.getElementById('budget-income-display');
-  id.innerHTML=budget.income>0?`<div class="bgt-total-card"><div><div class="bt-lbl">Expected income</div><div class="bt-val">${fmt(budget.income)}</div></div></div>`:'';
+  const incDisplay=document.getElementById('budget-income-display');
+  const form=document.getElementById('bgt-income-form');
+  if(budget.income>0){
+    form.style.display='none';
+    incDisplay.innerHTML=`<div class="bgt-total-card"><div><div class="bt-lbl">Expected income</div><div class="bt-val">${fmt(budget.income)}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><button class="bgt-income-btn" onclick="editBudgetIncome()">Edit</button><button class="bgt-income-btn danger" onclick="clearBudgetIncome()">Remove</button></div></div>`;
+  } else {
+    form.style.display='block';
+    incDisplay.innerHTML='';
+  }
   const actuals={};
   dataForMonth(key).filter(d=>d.type==='expense').forEach(d=>{actuals[d.cat]=(actuals[d.cat]||0)+d.amount;});
   const el=document.getElementById('budget-items');

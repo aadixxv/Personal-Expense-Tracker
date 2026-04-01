@@ -92,20 +92,21 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
 .month-badge{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text);background:var(--surface2);border:1px solid var(--border2);padding:6px 14px;border-radius:20px;min-width:118px;text-align:center;font-weight:500}
 
 /* Summary */
-.summary-grid{background:var(--surface);border:1px solid var(--border2);border-radius:16px;overflow:hidden;padding:14px 16px}
-.s-card{display:none}
-.s-balance-row{margin-bottom:10px}
-.s-sub-row{display:flex;gap:0;border-top:1px solid var(--border);padding-top:10px}
-.s-sub-item{flex:1;padding-right:12px}
-.s-sub-item:last-child{padding-right:0;padding-left:12px;border-left:1px solid var(--border)}
-.s-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
-.s-val{font-size:13px;font-weight:700;letter-spacing:-0.2px;line-height:1.2}
-.s-val.big{font-size:22px;letter-spacing:-0.6px}
+.summary-grid{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--border2);border-radius:14px;overflow:hidden}
+.s-card{padding:12px 16px;border-bottom:1px solid var(--border)}
+.s-card:last-child{border-bottom:none}
+.s-card.main{background:var(--surface2)}
+.s-card.sub-row{display:flex;flex-direction:row;padding:0;border-bottom:none}
+.s-card.sub-row .s-sub{flex:1;padding:10px 16px;border-right:1px solid var(--border)}
+.s-card.sub-row .s-sub:last-child{border-right:none}
+.s-label{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;white-space:nowrap}
+.s-val{font-size:14px;font-weight:700;letter-spacing:-0.2px;line-height:1.2}
+.s-val.big{font-size:20px;letter-spacing:-0.5px}
 .s-val.pos{color:var(--green)}
 .s-val.neg{color:var(--red)}
 .s-val.income{color:var(--green)}
 .s-val.spent{color:var(--red)}
-.s-hint{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:1px}
+.s-hint{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px}
 
 /* Tab bar */
 .tab-bar{display:flex;gap:2px;padding:20px 32px 0;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto}
@@ -130,9 +131,10 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
   .topbar{padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0}
   .topbar-row{margin-bottom:14px}
   .page-title{font-size:20px}
-  .summary-grid{padding:12px 14px;border-radius:12px}
-  .s-val.big{font-size:20px}
-  .s-val{font-size:12px}
+  .summary-grid{border-radius:12px}
+  .s-card.main{padding:10px 14px}
+  .s-val.big{font-size:18px}
+  .s-card.sub-row .s-sub{padding:8px 14px}
   .tab-bar{display:none}
   .content{padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 80px)}
   .fab-desk{display:none!important}
@@ -157,6 +159,10 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
 .fab-desk:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--accent-glow)}
 .fab-desk:active{transform:scale(.97)}
 .fab-mob{display:none}
+
+.cf-banner{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;margin-bottom:14px}
+.cf-label{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.cf-amt{font-size:14px;font-weight:700;font-family:'DM Mono',monospace}
 
 /* ══ TRANSACTIONS ══ */
 .filter-row{display:flex;gap:8px;margin-bottom:18px}
@@ -199,6 +205,11 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
 .bar-track{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden}
 .bar-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .brkdn-pct{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:5px}
+
+.bgt-income-btn{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em;transition:background .15s;white-space:nowrap}
+.bgt-income-btn:hover{background:rgba(255,255,255,0.2)}
+.bgt-income-btn.danger{border-color:rgba(248,113,113,0.4);background:rgba(248,113,113,0.15);color:#fca5a5}
+.bgt-income-btn.danger:hover{background:rgba(248,113,113,0.3)}
 
 /* ══ BUDGET ══ */
 .bgt-section{margin-bottom:24px}
@@ -364,17 +375,17 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
       </div>
     </div>
     <div class="summary-grid">
-      <div class="s-balance-row">
+      <div class="s-card main">
         <div class="s-label">Net Balance</div>
         <div class="s-val big" id="s-balance">AED 0.00</div>
         <div class="s-hint" id="s-period"></div>
       </div>
-      <div class="s-sub-row">
-        <div class="s-sub-item">
+      <div class="s-card sub-row">
+        <div class="s-sub">
           <div class="s-label">Income</div>
           <div class="s-val income" id="s-income">AED 0</div>
         </div>
-        <div class="s-sub-item">
+        <div class="s-sub">
           <div class="s-label">Spent</div>
           <div class="s-val spent" id="s-spent">AED 0</div>
         </div>
@@ -427,9 +438,11 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
     <div class="pane" id="pane-budget">
       <div class="bgt-section">
         <div class="sec-label">Expected income</div>
-        <div class="bgt-income-row">
-          <div class="field"><input type="number" id="b-inc-val" placeholder="AED amount" inputmode="decimal" min="0" step="0.01"></div>
-          <button class="small-btn" onclick="setBudgetIncome()">Set</button>
+        <div id="bgt-income-form">
+          <div class="bgt-income-row">
+            <div class="field"><input type="number" id="b-inc-val" placeholder="AED amount" inputmode="decimal" min="0" step="0.01"></div>
+            <button class="small-btn" onclick="setBudgetIncome()">Set</button>
+          </div>
         </div>
         <div id="budget-income-display"></div>
       </div>
@@ -697,6 +710,13 @@ function saveEdit(){
   save();render();closeEditSheet();
 }
 
+/* CARRY FORWARD — returns closing balance of all months before the given key */
+function carryForward(key){
+  return data
+    .filter(d=>d.date && d.date.slice(0,7) < key)
+    .reduce((s,d)=>d.type==='income'?s+d.amount:s-d.amount, 0);
+}
+
 /* RENDER */
 function render(){
   const key=viewMonthKey();
@@ -705,7 +725,8 @@ function render(){
   const md=dataForMonth(key);
   const inc=md.filter(d=>d.type==='income').reduce((s,d)=>s+d.amount,0);
   const spent=md.filter(d=>d.type==='expense').reduce((s,d)=>s+d.amount,0);
-  const bal=inc-spent;
+  const cf=carryForward(key);
+  const bal=cf+inc-spent;
   const bEl=document.getElementById('s-balance');
   bEl.textContent=fmt(bal);bEl.className='s-val big '+(bal>=0?'pos':'neg');
   document.getElementById('s-income').textContent=fmtS(inc);
@@ -724,8 +745,31 @@ function renderTxns(){
   if(type!=='all')rows=rows.filter(d=>d.type===type);
   if(cat!=='all')rows=rows.filter(d=>d.cat===cat);
   const el=document.getElementById('tx-list');
-  if(!rows.length){el.innerHTML='<div class="empty">No entries for this month.<br>Tap + to add one.</div>';return;}
-  let html='',lastDate='';
+
+  const cf=carryForward(key);
+  let html='';
+
+  // Show carried forward if there's a previous balance and no filters active
+  if(type==='all' && cat==='all'){
+    const prevMonthDate=new Date(viewMonthDate());prevMonthDate.setMonth(prevMonthDate.getMonth()-1);
+    const prevKey=prevMonthDate.getFullYear()+'-'+String(prevMonthDate.getMonth()+1).padStart(2,'0');
+    const hasPrevData=data.some(d=>d.date&&d.date.slice(0,7)<=prevKey);
+    if(hasPrevData){
+      const cfColor=cf>=0?'var(--green)':'var(--red)';
+      const cfSign=cf>=0?'+':'';
+      html+=`<div class="cf-banner">
+        <div class="cf-label">Carried forward</div>
+        <div class="cf-amt" style="color:${cfColor}">${cfSign}${fmt(cf)}</div>
+      </div>`;
+    }
+  }
+
+  if(!rows.length){
+    el.innerHTML=html+'<div class="empty">No entries for this month.<br>Tap + to add one.</div>';
+    return;
+  }
+
+  let lastDate='';
   rows.forEach(d=>{
     if(d.date!==lastDate){
       const label=d.date===today()?'Today':new Date(d.date+'T00:00:00').toLocaleDateString('en-AE',{weekday:'short',month:'short',day:'numeric'});
@@ -827,6 +871,16 @@ function setBudgetIncome(){
   if(!v||v<=0)return;
   budget.income=v;saveBudget();renderBudget();
   document.getElementById('b-inc-val').value='';
+  document.getElementById('bgt-income-form').style.display='none';
+}
+function editBudgetIncome(){
+  document.getElementById('b-inc-val').value=budget.income||'';
+  document.getElementById('bgt-income-form').style.display='block';
+  document.getElementById('b-inc-val').focus();
+}
+function clearBudgetIncome(){
+  if(!confirm('Remove expected income?'))return;
+  budget.income=0;saveBudget();renderBudget();
 }
 function toggleAddBudget(){const f=document.getElementById('add-budget-form');f.style.display=f.style.display==='none'?'block':'none';}
 function addBudgetItem(){
@@ -845,7 +899,14 @@ function deleteBudgetItem(cat){budget.items=budget.items.filter(i=>i.cat!==cat);
 function renderBudget(){
   const key=viewMonthKey();
   const id=document.getElementById('budget-income-display');
-  id.innerHTML=budget.income>0?`<div class="bgt-total-card"><div><div class="bt-lbl">Expected income</div><div class="bt-val">${fmt(budget.income)}</div></div></div>`:'';
+  const form=document.getElementById('bgt-income-form');
+  if(budget.income>0){
+    form.style.display='none';
+    id.innerHTML=`<div class="bgt-total-card"><div><div class="bt-lbl">Expected income</div><div class="bt-val">${fmt(budget.income)}</div></div><div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><button class="bgt-income-btn" onclick="editBudgetIncome()">Edit</button><button class="bgt-income-btn danger" onclick="clearBudgetIncome()">Remove</button></div></div>`;
+  } else {
+    form.style.display='block';
+    id.innerHTML='';
+  }
   const actuals={};
   dataForMonth(key).filter(d=>d.type==='expense').forEach(d=>{actuals[d.cat]=(actuals[d.cat]||0)+d.amount;});
   const el=document.getElementById('budget-items');

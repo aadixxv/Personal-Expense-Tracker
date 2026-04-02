@@ -267,6 +267,49 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
 .outline-btn{padding:9px 16px;border-radius:10px;background:transparent;border:1px solid var(--border2);color:var(--muted2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;width:100%;margin-top:10px}
 .outline-btn:hover{background:var(--surface2);color:var(--text)}
 
+/* ══ CALENDAR ══ */
+.cal-wrap{user-select:none}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px}
+.cal-dow{text-align:center;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:6px 0}
+.cal-day{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:6px;min-height:72px;cursor:pointer;transition:border-color .15s,background .15s;
+  display:flex;flex-direction:column;gap:3px
+}
+.cal-day:hover{border-color:var(--border2);background:var(--surface2)}
+.cal-day.today{border-color:var(--accent)}
+.cal-day.other-month{opacity:.28;cursor:default;pointer-events:none}
+.cal-day.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+.cal-day-num{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;color:var(--muted2)}
+.cal-day.today .cal-day-num{color:var(--accent);font-weight:700}
+.cal-pip{display:flex;gap:2px;flex-wrap:wrap;margin-top:1px}
+.cal-pip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cal-day-spent{font-size:9px;font-family:'DM Mono',monospace;color:var(--red);margin-top:auto;line-height:1.2}
+.cal-day-income{font-size:9px;font-family:'DM Mono',monospace;color:var(--green);line-height:1.2}
+.cal-day.heat-1{background:rgba(248,113,113,0.07)}
+.cal-day.heat-2{background:rgba(248,113,113,0.15)}
+.cal-day.heat-3{background:rgba(248,113,113,0.25)}
+.cal-day.heat-4{background:rgba(248,113,113,0.36)}
+.cal-day.today.heat-1,.cal-day.today.heat-2,.cal-day.today.heat-3,.cal-day.today.heat-4{background:var(--accent-glow)}
+.cal-detail{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:16px 18px;margin-top:4px}
+.cal-detail-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-detail-date{font-size:15px;font-weight:700;font-family:'Playfair Display',serif}
+.cal-detail-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:0}
+.cal-detail-close:hover{color:var(--text)}
+.cal-detail-empty{font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);text-align:center;padding:20px 0}
+.cal-detail-totals{display:flex;gap:10px;margin-bottom:14px}
+.cal-dt{flex:1;background:var(--surface2);border-radius:10px;padding:10px 12px}
+.cal-dt-lbl{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.cal-dt-val{font-size:14px;font-weight:700;font-family:'DM Mono',monospace}
+.cal-legend{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
+.cal-legend-swatch{width:10px;height:10px;border-radius:3px}
+@media(max-width:600px){
+  .cal-day{min-height:50px;padding:4px;border-radius:7px}
+  .cal-day-spent,.cal-day-income{display:none}
+  .cal-pip-dot{width:4px;height:4px}
+}
+
 /* ══ SHEETS ══ */
 .sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;backdrop-filter:blur(4px)}
 .sheet-overlay.open{display:block}
@@ -335,6 +378,9 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
     <button class="nav-item" id="snav-manage" onclick="switchTab('manage')">
       <span class="nav-icon">🏷️</span>Categories
     </button>
+    <button class="nav-item" id="snav-calendar" onclick="switchTab('calendar')">
+      <span class="nav-icon">📅</span>Calendar
+    </button>
   </nav>
   <div class="sidebar-bottom">
     <div class="theme-row">
@@ -395,6 +441,7 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
     <button class="tab" id="dtab-breakdown" onclick="switchTab('breakdown')">Analytics</button>
     <button class="tab" id="dtab-budget" onclick="switchTab('budget')">Budget Plan</button>
     <button class="tab" id="dtab-manage" onclick="switchTab('manage')">Categories</button>
+    <button class="tab" id="dtab-calendar" onclick="switchTab('calendar')">Calendar</button>
   </div>
 
   <div class="content">
@@ -477,6 +524,19 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
       </div>
     </div>
 
+    <!-- CALENDAR -->
+    <div class="pane" id="pane-calendar">
+      <div class="cal-wrap">
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:rgba(248,113,113,0.36)"></div>High spend</div>
+          <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:rgba(248,113,113,0.15)"></div>Low spend</div>
+          <div class="cal-legend-item"><div class="cal-legend-swatch" style="background:var(--accent-glow);border:1px solid var(--accent)"></div>Today</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-detail" id="cal-detail" style="display:none"></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /app -->
@@ -492,6 +552,7 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Inter
   <button class="bnav-item" id="bnav-breakdown" onclick="switchTab('breakdown')"><span class="bnav-icon">📊</span>Analytics</button>
   <button class="bnav-item" id="bnav-budget" onclick="switchTab('budget')"><span class="bnav-icon">🎯</span>Budget</button>
   <button class="bnav-item" id="bnav-manage" onclick="switchTab('manage')"><span class="bnav-icon">🏷️</span>Categories</button>
+  <button class="bnav-item" id="bnav-calendar" onclick="switchTab('calendar')"><span class="bnav-icon">📅</span>Calendar</button>
 </nav>
 
 <!-- ADD SHEET -->
@@ -651,6 +712,7 @@ function switchTab(tab){
   if(tab==='breakdown')renderBreakdown();
   if(tab==='budget')renderBudget();
   if(tab==='manage')renderCatList();
+  if(tab==='calendar')renderCalendar();
 }
 
 /* MONTH NAV */
@@ -763,6 +825,7 @@ function render(){
   renderTxns();
   if(activeTab==='breakdown')renderBreakdown();
   if(activeTab==='budget')renderBudget();
+  if(activeTab==='calendar')renderCalendar();
 }
 
 function renderTxns(){
@@ -992,6 +1055,144 @@ function renderCatList(){
       <div class="cat-swatch" style="background:${c.color}"></div>
       <button class="cat-del${c.builtin?' locked':''}" onclick="deleteCategory('${c.name}')" title="${c.builtin?'Built-in — cannot delete':'Delete'}">✕</button>
     </div>`).join('');
+}
+
+/* CALENDAR */
+let calSelectedDate = null;
+
+function renderCalendar(){
+  const key = viewMonthKey();
+  const vd  = viewMonthDate();
+  const year = vd.getFullYear();
+  const month = vd.getMonth(); // 0-based
+  const todayStr = today();
+
+  // All entries for this month
+  const monthData = dataForMonth(key);
+
+  // Build per-day lookup: { 'YYYY-MM-DD': {spent, income, entries[]} }
+  const dayMap = {};
+  monthData.forEach(d => {
+    if(!dayMap[d.date]) dayMap[d.date] = {spent:0, income:0, entries:[]};
+    if(d.type==='expense') dayMap[d.date].spent += d.amount;
+    else dayMap[d.date].income += d.amount;
+    dayMap[d.date].entries.push(d);
+  });
+
+  // Heat scale — max daily spend this month
+  const maxSpend = Math.max(1, ...Object.values(dayMap).map(d=>d.spent));
+
+  // Days of week headers
+  const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+
+  // First day of month (0=Sun)
+  const firstDow = new Date(year, month, 1).getDay();
+  // Days in month
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  // Days in previous month
+  const prevDays = new Date(year, month, 0).getDate();
+
+  // Leading blanks from previous month
+  for(let i = firstDow - 1; i >= 0; i--){
+    const d = prevDays - i;
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  }
+
+  // Actual days
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateStr = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const info = dayMap[dateStr] || {spent:0, income:0, entries:[]};
+    const isToday = dateStr === todayStr;
+    const isSelected = dateStr === calSelectedDate;
+
+    // Heat class
+    let heatClass = '';
+    if(info.spent > 0){
+      const ratio = info.spent / maxSpend;
+      heatClass = ratio < 0.25 ? 'heat-1' : ratio < 0.5 ? 'heat-2' : ratio < 0.75 ? 'heat-3' : 'heat-4';
+    }
+
+    // Category dots (up to 5)
+    const dots = info.entries.slice(0,5).map(e=>{
+      const col = catColor(e.cat);
+      return `<div class="cal-pip-dot" style="background:${col}"></div>`;
+    }).join('');
+
+    const spentHtml  = info.spent  > 0 ? `<div class="cal-day-spent">-${fmtS(info.spent)}</div>` : '';
+    const incomeHtml = info.income > 0 ? `<div class="cal-day-income">+${fmtS(info.income)}</div>` : '';
+
+    html += `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''} ${heatClass}"
+      onclick="calSelectDay('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      <div class="cal-pip">${dots}</div>
+      ${spentHtml}${incomeHtml}
+    </div>`;
+  }
+
+  // Trailing blanks
+  const totalCells = firstDow + daysInMonth;
+  const trailing = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for(let d = 1; d <= trailing; d++){
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+
+  // Re-render detail if a day is selected
+  if(calSelectedDate && dayMap[calSelectedDate]){
+    renderCalDetail(calSelectedDate, dayMap[calSelectedDate]);
+  } else if(calSelectedDate){
+    // selected date has no data — show empty
+    renderCalDetail(calSelectedDate, {spent:0, income:0, entries:[]});
+  } else {
+    document.getElementById('cal-detail').style.display = 'none';
+  }
+}
+
+function calSelectDay(dateStr){
+  calSelectedDate = calSelectedDate === dateStr ? null : dateStr;
+  renderCalendar();
+}
+
+function renderCalDetail(dateStr, info){
+  const panel = document.getElementById('cal-detail');
+  const label = dateStr === today() ? 'Today' :
+    new Date(dateStr+'T00:00:00').toLocaleDateString('en-AE',{weekday:'long',day:'numeric',month:'long'});
+
+  let txHtml = '';
+  if(!info.entries.length){
+    txHtml = `<div class="cal-detail-empty">No transactions on this day.</div>`;
+  } else {
+    txHtml = info.entries.map(d=>{
+      const col=catColor(d.cat),emoji=catEmoji(d.cat);
+      const sign=d.type==='income'?'+':'-', acls=d.type==='income'?'pos':'neg';
+      return`<div class="tx-item" style="margin-bottom:6px">
+        <div class="tx-dot" style="background:${col}22;color:${col}">${emoji}</div>
+        <div class="tx-body"><div class="tx-desc">${d.desc}</div><div class="tx-meta">${d.cat}</div></div>
+        <div class="tx-right">
+          <div class="tx-amt ${acls}">${sign}${fmt(d.amount)}</div>
+          <div class="tx-acts">
+            <button class="tx-btn" onclick="editEntry(${d.id});calSelectedDate='${dateStr}'">Edit</button>
+            <button class="tx-btn rm" onclick="deleteEntry(${d.id})">Remove</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="cal-detail-hdr">
+      <div class="cal-detail-date">${label}</div>
+      <button class="cal-detail-close" onclick="calSelectDay('${dateStr}')">✕</button>
+    </div>
+    <div class="cal-detail-totals">
+      <div class="cal-dt"><div class="cal-dt-lbl">Spent</div><div class="cal-dt-val" style="color:var(--red)">${info.spent>0?fmt(info.spent):'—'}</div></div>
+      <div class="cal-dt"><div class="cal-dt-lbl">Income</div><div class="cal-dt-val" style="color:var(--green)">${info.income>0?fmt(info.income):'—'}</div></div>
+      <div class="cal-dt"><div class="cal-dt-lbl">Net</div><div class="cal-dt-val" style="color:${(info.income-info.spent)>=0?'var(--green)':'var(--red)'}">${fmt(info.income-info.spent)}</div></div>
+    </div>
+    ${txHtml}`;
 }
 
 /* INIT */

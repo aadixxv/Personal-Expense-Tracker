@@ -86,6 +86,10 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:system
 .add-btn-sidebar{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:11px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;color:#fff;font-family:system-ui,'Segoe UI',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px var(--accent-glow)}
 .add-btn-sidebar:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--accent-glow)}
 .add-btn-sidebar:active{transform:scale(.97)}
+.backup-row{display:flex;gap:7px;margin-top:8px}
+.backup-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 8px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted2);font-family:system-ui,'Segoe UI',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s}
+.backup-btn:hover{background:var(--surface3);color:var(--text);border-color:var(--border3)}
+.backup-btn:active{transform:scale(.96)}
 
 /* ══ MAIN ══ */
 .main{margin-left:260px;flex:1;display:flex;flex-direction:column;min-height:100dvh;max-width:calc(100vw - 260px)}
@@ -400,6 +404,17 @@ body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:system
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Add Entry
     </button>
+    <div class="backup-row">
+      <button class="backup-btn" onclick="backupData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Backup
+      </button>
+      <button class="backup-btn" onclick="document.getElementById('restore-input').click()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Restore
+      </button>
+    </div>
+    <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreData(event)">
   </div>
 </aside>
 
@@ -1202,6 +1217,60 @@ function renderCalDetail(dateStr, info){
       <div class="cal-dt"><div class="cal-dt-lbl">Net</div><div class="cal-dt-val" style="color:${(info.income-info.spent)>=0?'var(--green)':'var(--red)'}">${fmt(info.income-info.spent)}</div></div>
     </div>
     ${txHtml}`;
+}
+
+/* BACKUP & RESTORE */
+function backupData(){
+  const payload={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    data,
+    budget,
+    categories
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const dateStr=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`tracker-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function restoreData(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const payload=JSON.parse(e.target.result);
+      // Support both raw array export and wrapped object
+      const incoming=payload.version?payload:{version:1,data:payload,budget:{income:0,items:[]},categories:[...DEFAULT_CATS]};
+      if(!Array.isArray(incoming.data))throw new Error('Invalid backup file.');
+      const count=incoming.data.length;
+      if(!confirm(`This will replace all current data with ${count} transaction${count!==1?'s':''} from the backup.\n\nContinue?`)){
+        event.target.value='';return;
+      }
+      data=incoming.data;
+      budget=incoming.budget||{income:0,items:[]};
+      categories=incoming.categories&&incoming.categories.length?incoming.categories:[...DEFAULT_CATS];
+      save();saveBudget();saveCats();
+      populateSelects();render();
+      if(activeTab==='breakdown')renderBreakdown();
+      if(activeTab==='budget')renderBudget();
+      if(activeTab==='manage')renderCatList();
+      if(activeTab==='calendar')renderCalendar();
+      closeSidebar();
+      alert(`✅ Restored ${count} transaction${count!==1?'s':''} successfully.`);
+    }catch(err){
+      alert('❌ Could not read backup file. Make sure it\'s a valid Tracker backup.');
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
 }
 
 /* INIT */
